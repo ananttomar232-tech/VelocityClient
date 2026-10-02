@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "velocity",
+  "version": "${version}",
+  "name": "Velocity Client",
+  "description": "A lightweight, clean Fabric client shell focused on smooth performance and a fast in-game control panel.",
+  "authors": ["Velocity Team"],
+  "contact": {
+    "homepage": "https://fabricmc.net/"
+  },
+  "license": "MIT",
+  "icon": "assets/velocity/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.velocity.client.VelocityClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "fabric-api": ">=0.116.0"
+  }
+}
