@@ -30,6 +30,18 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
 
+      - name: Check Modrinth projects (temporary)
+        run: |
+          check() {
+            r=$(curl -s "https://api.modrinth.com/v2/project/$1/version?loaders=%5B%22$2%22%5D&game_versions=%5B%221.21.1%22%5D" -H "User-Agent: VelocityClient-CI")
+            a=$(curl -s "https://api.modrinth.com/v2/project/$1/version?loaders=%5B%22$2%22%5D" -H "User-Agent: VelocityClient-CI")
+            t=$(curl -s "https://api.modrinth.com/v2/project/$1" -H "User-Agent: VelocityClient-CI" | jq -r '"\(.title) [\(.project_type)] client=\(.client_side) server=\(.server_side) downloads=\(.downloads)"' 2>/dev/null)
+            echo "MODRINTH $1 ($2): 1.21.1=$(echo "$r" | jq 'length' 2>/dev/null) any=$(echo "$a" | jq 'length' 2>/dev/null) deps=$(echo "$r" | jq -c '[.[0].dependencies[]? | select(.dependency_type=="required") | .project_id]' 2>/dev/null) :: $t"
+          }
+          for m in iris modernfix krypton noisium badoptimizations entitytexturefeatures entity-model-features not-enough-animations wavey-capes fallingleaves falling-leaves animatica eating-animation 3dskinlayers smooth-swapping continuity cit-resewn; do check $m fabric; done
+          for p in fresh-animations xalis-enchanted-books animated-items waving-plants better-flames colorful-hearts icons simple-icons better-leaves fast-better-grass default-dark-mode low-on-fire clear-glass better-icons animated-icons enhanced-boss-bars fresh-moves even-better-enchants better-hotbar-icons vanilla-experience; do check $p minecraft; done
+          for s in makeup-ultra-fast-shaders; do check $s iris; done
+
       - name: Check installer script syntax
         shell: pwsh
         run: |
