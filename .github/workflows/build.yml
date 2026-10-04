@@ -2,7 +2,11 @@ name: Build Velocity Client
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -10,24 +14,37 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Java 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Setup Gradle
-  uses: gradle/actions/setup-gradle@v6
-  with:
-    gradle-version: '8.12'
-        
-      - name: Build Velocity Client
-        run: gradle build
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Upload JAR
+      - name: Build Velocity Client
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace
+
+      - name: Package download
+        run: |
+          mkdir -p dist
+          cp build/libs/velocity-client-*.jar dist/
+          cp installer/* dist/
+          cp README.md dist/
+
+      - name: Upload Velocity Client
         uses: actions/upload-artifact@v4
         with:
           name: Velocity-Client
-          path: build/libs/*.jar
+          path: dist/
+
+      - name: Publish release (tags v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*

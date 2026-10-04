@@ -1,6 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.10.1'
-    id 'maven-publish'
+    id 'fabric-loom' version "${loom_version}"
 }
 
 version = project.mod_version
@@ -11,13 +10,8 @@ base {
 }
 
 loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "velocity" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
+    mixin {
+        defaultRefmapName = "velocity.refmap.json"
     }
 }
 
@@ -37,10 +31,10 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
+    it.options.encoding = "UTF-8"
 }
 
 java {
-    withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -48,17 +42,5 @@ java {
 jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
-    }
-}
-
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-    repositories {
-        // Add a Maven repository here when publishing builds.
     }
 }
