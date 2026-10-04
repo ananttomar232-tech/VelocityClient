@@ -48,6 +48,24 @@ $AnimationMods = [ordered]@{
 }
 $AnimationPack = 'fresh-animations'
 
+# Lightweight client-side animation mods (all checked to exist for 1.21.1)
+$ExtraAnimationMods = [ordered]@{
+    'not-enough-animations' = 'Not Enough Animations - better player animations'
+    'eating-animation'      = 'Eating Animation - see food being eaten'
+    'smooth-swapping'       = 'Smooth Swapping - items glide in inventories'
+    'wavey-capes'           = 'Wavey Capes - capes move with physics'
+    'animatica'             = 'Animatica - animated textures support'
+    'cloth-config'          = 'Cloth Config (needed by Falling Leaves)'
+    'fallingleaves'         = 'Falling Leaves - leaf particles from trees'
+}
+
+# Lightweight resource packs (enabled automatically)
+$ExtraPacks = [ordered]@{
+    'icons'                 = 'Icons - cleaner HUD and GUI icons'
+    'animated-items'        = 'Animated Items - subtly animated item icons'
+    'xalis-enchanted-books' = "xali's Enchanted Books - a different icon per enchantment"
+}
+
 function Write-Step($text) { Write-Host ''; Write-Host "  > $text" -ForegroundColor Magenta }
 function Write-Ok($text)   { Write-Host "    + $text" -ForegroundColor Green }
 function Write-Warn2($text){ Write-Host "    ! $text" -ForegroundColor Yellow }
@@ -115,6 +133,8 @@ Write-Step 'Optional extras'
 Write-Host '    Shaders look amazing but cost a lot of FPS on integrated graphics.' -ForegroundColor DarkGray
 $wantShaders = Ask-YesNo 'Install Iris + MakeUp Ultra Fast shaders? (turn on with O in Video Settings > Shader Packs)' $false
 $wantAnimations = Ask-YesNo 'Install Fresh Animations (smooth mob animations, small FPS cost)?' $true
+$wantAnimMods = Ask-YesNo 'Install light animation mods (player/eating animations, smooth inventory, wavey capes, falling leaves)?' $true
+$wantPacks = Ask-YesNo 'Install resource packs (Icons, Animated Items, Enchanted Books icons)?' $true
 
 # --- 3. Remove files this installer added last time (so updates are clean) --
 $ShaderDir = Join-Path $GameDir 'shaderpacks'
@@ -163,11 +183,25 @@ if ($wantShaders) {
     [void](Install-Modrinth $ShaderPack 'MakeUp Ultra Fast shader pack' 'iris' $ShaderDir 'shaderpacks\')
 }
 
-$animationPackFile = $null
+$enablePacks = New-Object System.Collections.Generic.List[string]
 if ($wantAnimations) {
     Write-Step 'Downloading Fresh Animations'
     foreach ($slug in $AnimationMods.Keys) { [void](Install-Modrinth $slug $AnimationMods[$slug] 'fabric' $ModsDir '') }
-    $animationPackFile = Install-Modrinth $AnimationPack 'Fresh Animations resource pack' 'minecraft' $PackDir 'resourcepacks\'
+    $f = Install-Modrinth $AnimationPack 'Fresh Animations resource pack' 'minecraft' $PackDir 'resourcepacks\'
+    if ($f) { $enablePacks.Add($f) }
+}
+
+if ($wantAnimMods) {
+    Write-Step 'Downloading animation mods'
+    foreach ($slug in $ExtraAnimationMods.Keys) { [void](Install-Modrinth $slug $ExtraAnimationMods[$slug] 'fabric' $ModsDir '') }
+}
+
+if ($wantPacks) {
+    Write-Step 'Downloading resource packs'
+    foreach ($slug in $ExtraPacks.Keys) {
+        $f = Install-Modrinth $slug $ExtraPacks[$slug] 'minecraft' $PackDir 'resourcepacks\'
+        if ($f) { $enablePacks.Add($f) }
+    }
 }
 
 # --- 5. Velocity itself -----------------------------------------------------
@@ -197,24 +231,30 @@ if (-not (Test-Path $opts) -and (Test-Path (Join-Path $McDir 'options.txt'))) {
     Copy-Item (Join-Path $McDir 'options.txt') $opts
 }
 
-# Switch Fresh Animations on so it works straight away.
-if ($animationPackFile) {
-    $entry = '"file/' + $animationPackFile + '"'
+# Switch the downloaded resource packs on so they work straight away.
+# (Velocity Icons and Velocity Clear Glass are built into the mod and switch themselves on.)
+if ($enablePacks.Count -gt 0) {
     $lines = if (Test-Path $opts) { @(Get-Content $opts) } else { @() }
     $found = $false
     for ($i = 0; $i -lt $lines.Count; $i++) {
         if ($lines[$i] -match '^resourcePacks:\[(.*)\]$') {
             $found = $true
-            $list = $Matches[1]
-            # Drop older Fresh Animations versions, then add the new one at the end (highest priority).
-            $items = @($list -split ',' | Where-Object { $_ -and ($_ -notmatch 'FreshAnimations|Fresh Animations|fresh-animations') })
-            $items += $entry
+            $items = @($Matches[1] -split ',' | Where-Object { $_ })
+            foreach ($pack in $enablePacks) {
+                # Drop older versions of the same pack (same name before the version number), then add the new one.
+                $stem = ($pack -replace '[-_ ]?v?\d.*$', '')
+                $items = @($items | Where-Object { -not ($_.Trim('"') -like "file/$stem*") })
+                $items += '"file/' + $pack + '"'
+            }
             $lines[$i] = 'resourcePacks:[' + ($items -join ',') + ']'
         }
     }
-    if (-not $found) { $lines += 'resourcePacks:["vanilla","fabric",' + $entry + ']' }
+    if (-not $found) {
+        $packList = ($enablePacks | ForEach-Object { '"file/' + $_ + '"' }) -join ','
+        $lines += 'resourcePacks:["vanilla","fabric",' + $packList + ']'
+    }
     Write-Utf8 $opts ($lines -join [Environment]::NewLine)
-    Write-Ok 'Fresh Animations enabled'
+    Write-Ok "Enabled $($enablePacks.Count) resource pack(s)"
 }
 
 # --- 6. Launcher profile ----------------------------------------------------

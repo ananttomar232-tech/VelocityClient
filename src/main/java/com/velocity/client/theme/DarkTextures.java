@@ -72,6 +72,7 @@ public final class DarkTextures implements SimpleSynchronousResourceReloadListen
     /** Applies (or removes) the dark textures according to the current setting. */
     public static void apply() {
         MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getResourceManager() == null) return;
         TextureManager textures = client.getTextureManager();
         for (String path : PATHS) {
             Identifier id = Identifier.ofVanilla(path);
@@ -102,7 +103,8 @@ public final class DarkTextures implements SimpleSynchronousResourceReloadListen
                 if (Math.abs(r - g) > 10 || Math.abs(g - b) > 10) continue; // coloured pixel: keep
                 int v = map((r + g + b) / 3);
                 int nr = v, ng = Math.min(255, v + 3), nb = Math.min(255, v + 10); // slight blue tint
-                image.setColor(x, y, a << 24 | nb << 16 | ng << 8 | nr);
+                int na = Math.round(a * (float) VelocityConfig.containerOpacity);
+                image.setColor(x, y, na << 24 | nb << 16 | ng << 8 | nr);
             }
         }
     }

@@ -9,6 +9,7 @@ public final class VanillaTheme {
 
     public static void button(DrawContext ctx, int x, int y, int w, int h, boolean active, float hover, float alpha) {
         int fill = active ? Gfx.mix(0xE81A1E29, 0xF5262C3C, hover) : 0xB0141720;
+        fill = Gfx.fade(fill, (float) com.velocity.client.VelocityConfig.uiOpacity);
         int border = active ? Gfx.mix(0x40FFFFFF, Gfx.accent(), hover) : 0x20FFFFFF;
         Gfx.roundBox(ctx, x, y, w, h, 3, Gfx.fade(fill, alpha), Gfx.fade(border, alpha));
         int bar = Math.round((w - 8) * hover);

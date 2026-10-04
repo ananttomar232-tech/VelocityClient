@@ -39,6 +39,14 @@ public final class VelocityConfig {
     public static boolean screenAnimations = true;
     /** Toasts like "Zoom enabled". */
     public static boolean notifications = true;
+    /** Opacity of Velocity menus and themed vanilla buttons (0.3 - 1). */
+    public static double uiOpacity = 0.95;
+    /** Opacity of dark inventory / container windows (0.4 - 1). */
+    public static double containerOpacity = 1.0;
+    /** Opacity of HUD mod backgrounds (0 - 1). */
+    public static double hudOpacity = 0.5;
+    /** Opacity of the hotbar (0.2 - 1). */
+    public static double hotbarOpacity = 1.0;
 
     private VelocityConfig() {}
 
@@ -65,6 +73,10 @@ public final class VelocityConfig {
             darkInventories = getBool(root, "darkInventories", darkInventories);
             screenAnimations = getBool(root, "screenAnimations", screenAnimations);
             notifications = getBool(root, "notifications", notifications);
+            uiOpacity = getDouble(root, "uiOpacity", uiOpacity);
+            containerOpacity = getDouble(root, "containerOpacity", containerOpacity);
+            hudOpacity = getDouble(root, "hudOpacity", hudOpacity);
+            hotbarOpacity = getDouble(root, "hotbarOpacity", hotbarOpacity);
 
             JsonObject modules = root.has("modules") ? root.getAsJsonObject("modules") : new JsonObject();
             for (Module module : ModuleManager.all()) {
@@ -98,6 +110,10 @@ public final class VelocityConfig {
         root.addProperty("darkInventories", darkInventories);
         root.addProperty("screenAnimations", screenAnimations);
         root.addProperty("notifications", notifications);
+        root.addProperty("uiOpacity", uiOpacity);
+        root.addProperty("containerOpacity", containerOpacity);
+        root.addProperty("hudOpacity", hudOpacity);
+        root.addProperty("hotbarOpacity", hotbarOpacity);
 
         JsonObject modules = new JsonObject();
         for (Module module : ModuleManager.all()) {
@@ -126,6 +142,10 @@ public final class VelocityConfig {
 
     private static boolean getBool(JsonObject o, String key, boolean fallback) {
         return o.has(key) ? o.get(key).getAsBoolean() : fallback;
+    }
+
+    private static double getDouble(JsonObject o, String key, double fallback) {
+        return o.has(key) ? o.get(key).getAsDouble() : fallback;
     }
 
     private static int getInt(JsonObject o, String key, int fallback) {

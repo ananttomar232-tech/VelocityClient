@@ -69,7 +69,7 @@ public final class KeystrokesModule extends HudModule {
                      int x, int y, int w, int h, float dt) {
         boolean down = binding.isPressed();
         glow[index] = Gfx.approach(glow[index], down ? 1f : 0f, 18f, dt);
-        int bg = Gfx.mix(background.isOn() ? 0x80000000 : 0x00000000, 0xD0FFFFFF, glow[index]);
+        int bg = Gfx.mix(background.isOn() ? hudBackground() : 0x00000000, 0xD0FFFFFF, glow[index]);
         Gfx.roundRect(ctx, x, y, w, h, 2, bg);
         if (!label.isEmpty()) {
             int tw = client.textRenderer.getWidth(label);

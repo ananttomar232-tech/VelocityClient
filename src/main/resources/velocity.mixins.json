@@ -10,6 +10,7 @@
     "EntityMixin",
     "GameRendererMixin",
     "HandledScreenMixin",
+    "InGameHudHotbarMixin",
     "InGameHudMixin",
     "InGameOverlayRendererMixin",
     "InventoryScreenMixin",
@@ -18,7 +19,8 @@
     "PressableWidgetMixin",
     "ScreenMixin",
     "SimpleOptionAccessor",
-    "SliderWidgetMixin"
+    "SliderWidgetMixin",
+    "TranslucentWindowsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

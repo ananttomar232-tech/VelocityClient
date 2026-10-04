@@ -4,6 +4,7 @@ import com.velocity.client.gui.HudEditorScreen;
 import com.velocity.client.gui.VelocityMenuScreen;
 import com.velocity.client.module.ModuleManager;
 import com.velocity.client.module.impl.FullbrightModule;
+import com.velocity.client.theme.BuiltinPacks;
 import com.velocity.client.theme.DarkTextures;
 import com.velocity.client.util.CombatTracker;
 import com.velocity.client.util.FpsTracker;
@@ -54,6 +55,7 @@ public final class VelocityClient implements ClientModInitializer {
         LOGGER.info("{} {} ready with {} mods", NAME, version(), ModuleManager.all().size());
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new DarkTextures());
+        BuiltinPacks.register();
 
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClient) CombatTracker.onAttack(player, entity);

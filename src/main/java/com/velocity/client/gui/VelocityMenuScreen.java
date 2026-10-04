@@ -69,6 +69,7 @@ public final class VelocityMenuScreen extends BaseScreen {
     private int maxScroll;
 
     private DoubleConsumer activeSlider;
+    private Runnable sliderOnRelease;
     private int activeSliderX;
     private int activeSliderW;
 
@@ -127,7 +128,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         ctx.fill(0, 0, width, height, Gfx.withAlpha(0x090B10, Math.round(175 * open)));
 
         int px = px(), py = py(), pw = pw(), ph = ph();
-        Gfx.roundBox(ctx, px, py, pw, ph, 6, Gfx.PANEL, Gfx.STROKE);
+        Gfx.roundBox(ctx, px, py, pw, ph, 6, Gfx.fade(Gfx.PANEL, (float) VelocityConfig.uiOpacity), Gfx.STROKE);
         Gfx.roundRect(ctx, px + 6, py, pw - 12, 2, 1, Gfx.accent());
 
         drawHeader(ctx, px, py, pw);
@@ -274,7 +275,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         float on = anim(m.getId() + ":on", m.isEnabled(), 12f);
 
         int border = Gfx.mix(Gfx.STROKE, Gfx.withAlpha(Gfx.accent(), 200), on * 0.8f);
-        Gfx.roundBox(ctx, x, y, w, h, 5, Gfx.mix(Gfx.CARD, Gfx.CARD_HOVER, hv), border);
+        Gfx.roundBox(ctx, x, y, w, h, 5, Gfx.fade(Gfx.mix(Gfx.CARD, Gfx.CARD_HOVER, hv), (float) Math.min(1, VelocityConfig.uiOpacity + 0.1)), border);
 
         // Whole card: left click toggles, right click opens options
         region(x, y, w, h, button -> {
@@ -603,6 +604,27 @@ public final class VelocityMenuScreen extends BaseScreen {
         y = boolRow(ctx, "Fade in screens", VelocityConfig.screenAnimations, () -> VelocityConfig.screenAnimations = !VelocityConfig.screenAnimations, cx, y, cw);
         y += 4;
 
+        section(ctx, "TRANSPARENCY", cx, y);
+        y += 12;
+        y = sliderRow(ctx, "Menu & button opacity", VelocityConfig.uiOpacity, 0.3, 1.0,
+                v -> VelocityConfig.uiOpacity = v, null, cx, y, cw);
+        y = sliderRow(ctx, "Inventory window opacity", VelocityConfig.containerOpacity, 0.4, 1.0,
+                v -> VelocityConfig.containerOpacity = v, com.velocity.client.theme.DarkTextures::apply, cx, y, cw);
+        y = sliderRow(ctx, "HUD background opacity", VelocityConfig.hudOpacity, 0.0, 1.0,
+                v -> VelocityConfig.hudOpacity = v, null, cx, y, cw);
+        y = sliderRow(ctx, "Hotbar opacity", VelocityConfig.hotbarOpacity, 0.2, 1.0,
+                v -> VelocityConfig.hotbarOpacity = v, null, cx, y, cw);
+        y = sliderRow(ctx, "Chat background opacity", client.options.getTextBackgroundOpacity().getValue(), 0.0, 1.0,
+                v -> client.options.getTextBackgroundOpacity().setValue(v), client.options::write, cx, y, cw);
+        y += 4;
+
+        section(ctx, "BUILT-IN RESOURCE PACKS", cx, y);
+        Gfx.scaledText(ctx, textRenderer, "switching reloads resources for a few seconds", cx + 132, y + 1, 0.75f, Gfx.MUTED);
+        y += 12;
+        y = packRow(ctx, "Velocity Icons  -  flat hearts, hunger, armor, hotbar, XP", com.velocity.client.theme.BuiltinPacks.ICONS, cx, y, cw);
+        y = packRow(ctx, "Velocity Clear Glass  -  clean glass without streaks", com.velocity.client.theme.BuiltinPacks.CLEAR_GLASS, cx, y, cw);
+        y += 4;
+
         section(ctx, "QUICK ACTIONS", cx, y);
         y += 12;
         int bw = (cw - 8) / 3;
@@ -617,6 +639,29 @@ public final class VelocityMenuScreen extends BaseScreen {
         measuredHeight = y + 14 + Math.round(scroll) - cy;
         unclip(ctx);
         drawScrollbar(ctx, cx + cw + 3, cy, ch, contentH);
+    }
+
+    private int sliderRow(DrawContext ctx, String label, double value, double min, double max,
+                          java.util.function.DoubleConsumer setter, Runnable onRelease, int x, int y, int w) {
+        Gfx.roundRect(ctx, x, y + 1, w, 20, 3, 0xFF1B1F2B);
+        Gfx.text(ctx, textRenderer, label, x + 7, y + 7, 0xFFFFFFFF);
+        String pct = Math.round(value * 100) + "%";
+        Gfx.text(ctx, textRenderer, pct, x + w - 133 - textRenderer.getWidth(pct), y + 7, Gfx.accent());
+        slider(ctx, x + w - 127, y + 11, 120, (value - min) / (max - min), p -> {
+            double v = min + Math.max(0, Math.min(1, p)) * (max - min);
+            setter.accept(Math.round(v * 100) / 100.0);
+            sliderOnRelease = onRelease;
+        });
+        return y + 22;
+    }
+
+    private int packRow(DrawContext ctx, String label, String pack, int x, int y, int w) {
+        if (!com.velocity.client.theme.BuiltinPacks.exists(pack)) return y;
+        boolean on = com.velocity.client.theme.BuiltinPacks.isEnabled(pack);
+        Gfx.roundRect(ctx, x, y + 1, w, 20, 3, 0xFF1B1F2B);
+        Gfx.text(ctx, textRenderer, label, x + 7, y + 7, 0xFFFFFFFF);
+        toggle(ctx, pack, x + w - 29, y + 6, on, () -> com.velocity.client.theme.BuiltinPacks.toggle(pack));
+        return y + 22;
     }
 
     private int boolRow(DrawContext ctx, String label, boolean value, Runnable flip, int x, int y, int w) {
@@ -657,6 +702,8 @@ public final class VelocityMenuScreen extends BaseScreen {
     public boolean mouseReleased(double mx, double my, int button) {
         if (activeSlider != null) {
             activeSlider = null;
+            if (sliderOnRelease != null) sliderOnRelease.run();
+            sliderOnRelease = null;
             VelocityConfig.save();
         }
         return super.mouseReleased(mx, my, button);

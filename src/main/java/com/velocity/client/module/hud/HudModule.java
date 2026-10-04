@@ -97,7 +97,12 @@ public abstract class HudModule extends Module {
     }
 
     protected void drawBackground(DrawContext ctx, int w, int h) {
-        if (background.isOn()) Gfx.roundRect(ctx, 0, 0, w, h, 2, 0x80000000);
+        if (background.isOn()) Gfx.roundRect(ctx, 0, 0, w, h, 2, hudBackground());
+    }
+
+    /** Black background tinted by the global HUD opacity setting. */
+    public static int hudBackground() {
+        return Gfx.withAlpha(0x000000, (int) Math.round(255 * com.velocity.client.VelocityConfig.hudOpacity));
     }
 
     /** Colour for HUD text according to the "Text Color" setting. Offset makes chroma text ripple. */
