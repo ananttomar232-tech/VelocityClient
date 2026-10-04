@@ -1,66 +1,154 @@
 package com.velocity.client;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.velocity.client.module.Module;
+import com.velocity.client.module.ModuleManager;
+import com.velocity.client.module.hud.HudModule;
+import com.velocity.client.module.setting.Setting;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 
-/** Small dependency-free config file for Velocity's client preferences. */
+/** Saves Velocity's settings and module layout to config/velocity-client.json. */
 public final class VelocityConfig {
-    private static final String FILE_NAME = "velocity-client.properties";
-    private static final Properties PROPERTIES = new Properties();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final String FILE_NAME = "velocity-client.json";
 
-    public static boolean performanceProfile = true;
-    public static boolean fpsHud = true;
-    public static boolean coordsHud = false;
-    public static boolean sprintHud = true;
-    public static boolean zoom = true;
+    public static final String[] ACCENT_NAMES = {"Violet", "Ocean", "Aqua", "Mint", "Sunset", "Rose", "Gold"};
+    public static final int[] ACCENTS = {0xFF8C7CFF, 0xFF4C8DFF, 0xFF27D3E6, 0xFF2BD47D, 0xFFFF8A3D, 0xFFFF5C9A, 0xFFF5C542};
+
+    public static int accent = 0;
+    public static boolean customMainMenu = true;
+    public static boolean animations = true;
+    public static double chromaSpeed = 1.0;
+    public static boolean firstRunDone = false;
+    public static String preset = "Balanced";
+    /** Restyle vanilla buttons, sliders and menu backgrounds with the Velocity look. */
+    public static boolean uiTheme = true;
+    /** Dark recolour of inventory / container / advancement windows. */
+    public static boolean darkInventories = true;
+    /** Fade vanilla screens in when they open. */
+    public static boolean screenAnimations = true;
+    /** Toasts like "Zoom enabled". */
+    public static boolean notifications = true;
+    /** Opacity of Velocity menus and themed vanilla buttons (0.3 - 1). */
+    public static double uiOpacity = 0.95;
+    /** Opacity of dark inventory / container windows (0.4 - 1). */
+    public static double containerOpacity = 1.0;
+    /** Opacity of HUD mod backgrounds (0 - 1). */
+    public static double hudOpacity = 0.5;
+    /** Opacity of the hotbar (0.2 - 1). */
+    public static double hotbarOpacity = 1.0;
 
     private VelocityConfig() {}
 
-    private static Path path() {
+    public static int accentColor() {
+        return ACCENTS[Math.floorMod(accent, ACCENTS.length)];
+    }
+
+    public static Path path() {
         return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
     }
 
     public static void load() {
         Path path = path();
-        if (Files.exists(path)) {
-            try (InputStream in = Files.newInputStream(path)) {
-                PROPERTIES.load(in);
-                performanceProfile = bool("performanceProfile", performanceProfile);
-                fpsHud = bool("fpsHud", fpsHud);
-                coordsHud = bool("coordsHud", coordsHud);
-                sprintHud = bool("sprintHud", sprintHud);
-                zoom = bool("zoom", zoom);
-            } catch (IOException ignored) {
-                // Keep defaults when the config cannot be read.
+        if (!Files.exists(path)) return;
+        try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            accent = getInt(root, "accent", accent);
+            customMainMenu = getBool(root, "customMainMenu", customMainMenu);
+            animations = getBool(root, "animations", animations);
+            chromaSpeed = root.has("chromaSpeed") ? root.get("chromaSpeed").getAsDouble() : chromaSpeed;
+            firstRunDone = getBool(root, "firstRunDone", firstRunDone);
+            preset = root.has("preset") ? root.get("preset").getAsString() : preset;
+            uiTheme = getBool(root, "uiTheme", uiTheme);
+            darkInventories = getBool(root, "darkInventories", darkInventories);
+            screenAnimations = getBool(root, "screenAnimations", screenAnimations);
+            notifications = getBool(root, "notifications", notifications);
+            uiOpacity = getDouble(root, "uiOpacity", uiOpacity);
+            containerOpacity = getDouble(root, "containerOpacity", containerOpacity);
+            hudOpacity = getDouble(root, "hudOpacity", hudOpacity);
+            hotbarOpacity = getDouble(root, "hotbarOpacity", hotbarOpacity);
+
+            JsonObject modules = root.has("modules") ? root.getAsJsonObject("modules") : new JsonObject();
+            for (Module module : ModuleManager.all()) {
+                if (!modules.has(module.getId())) continue;
+                JsonObject m = modules.getAsJsonObject(module.getId());
+                module.setEnabledSilently(getBool(m, "enabled", module.isEnabled()));
+                if (module instanceof HudModule hud) {
+                    if (m.has("x")) hud.x = m.get("x").getAsFloat();
+                    if (m.has("y")) hud.y = m.get("y").getAsFloat();
+                }
+                JsonObject settings = m.has("settings") ? m.getAsJsonObject("settings") : new JsonObject();
+                for (Setting<?> setting : module.getSettings()) {
+                    JsonElement value = settings.get(setting.getName());
+                    if (value != null) setting.fromJson(value);
+                }
             }
+        } catch (Exception e) {
+            VelocityClient.LOGGER.warn("Could not read Velocity config, using defaults", e);
         }
     }
 
     public static void save() {
-        PROPERTIES.setProperty("performanceProfile", Boolean.toString(performanceProfile));
-        PROPERTIES.setProperty("fpsHud", Boolean.toString(fpsHud));
-        PROPERTIES.setProperty("coordsHud", Boolean.toString(coordsHud));
-        PROPERTIES.setProperty("sprintHud", Boolean.toString(sprintHud));
-        PROPERTIES.setProperty("zoom", Boolean.toString(zoom));
+        JsonObject root = new JsonObject();
+        root.addProperty("accent", accent);
+        root.addProperty("customMainMenu", customMainMenu);
+        root.addProperty("animations", animations);
+        root.addProperty("chromaSpeed", chromaSpeed);
+        root.addProperty("firstRunDone", firstRunDone);
+        root.addProperty("preset", preset);
+        root.addProperty("uiTheme", uiTheme);
+        root.addProperty("darkInventories", darkInventories);
+        root.addProperty("screenAnimations", screenAnimations);
+        root.addProperty("notifications", notifications);
+        root.addProperty("uiOpacity", uiOpacity);
+        root.addProperty("containerOpacity", containerOpacity);
+        root.addProperty("hudOpacity", hudOpacity);
+        root.addProperty("hotbarOpacity", hotbarOpacity);
+
+        JsonObject modules = new JsonObject();
+        for (Module module : ModuleManager.all()) {
+            JsonObject m = new JsonObject();
+            m.addProperty("enabled", module.isEnabled());
+            if (module instanceof HudModule hud) {
+                m.addProperty("x", hud.x);
+                m.addProperty("y", hud.y);
+            }
+            JsonObject settings = new JsonObject();
+            for (Setting<?> setting : module.getSettings()) settings.add(setting.getName(), setting.toJson());
+            m.add("settings", settings);
+            modules.add(module.getId(), m);
+        }
+        root.add("modules", modules);
 
         try {
             Files.createDirectories(path().getParent());
-            try (OutputStream out = Files.newOutputStream(path())) {
-                PROPERTIES.store(out, "Velocity Client settings");
+            try (Writer writer = Files.newBufferedWriter(path(), StandardCharsets.UTF_8)) {
+                GSON.toJson(root, writer);
             }
-        } catch (IOException ignored) {
-            // Configuration is best-effort; the game should keep running.
+        } catch (Exception e) {
+            VelocityClient.LOGGER.warn("Could not save Velocity config", e);
         }
     }
 
-    private static boolean bool(String key, boolean fallback) {
-        String value = PROPERTIES.getProperty(key);
-        return value == null ? fallback : Boolean.parseBoolean(value);
+    private static boolean getBool(JsonObject o, String key, boolean fallback) {
+        return o.has(key) ? o.get(key).getAsBoolean() : fallback;
+    }
+
+    private static double getDouble(JsonObject o, String key, double fallback) {
+        return o.has(key) ? o.get(key).getAsDouble() : fallback;
+    }
+
+    private static int getInt(JsonObject o, String key, int fallback) {
+        return o.has(key) ? o.get(key).getAsInt() : fallback;
     }
 }

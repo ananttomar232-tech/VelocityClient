@@ -2,11 +2,23 @@ name: Build Velocity Client
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Publish a GitHub Release with this tag (e.g. v1.0.0). Leave empty to just build.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Set by "Run workflow" with a release tag, or by pushing a v* tag.
+      RELEASE_TAG: ${{ inputs.release_tag || (startsWith(github.ref, 'refs/tags/v') && github.ref_name || '') }}
 
     steps:
       - name: Checkout
@@ -19,15 +31,102 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-  uses: gradle/actions/setup-gradle@v6
-  with:
-    gradle-version: '8.12'
-        
-      - name: Build Velocity Client
-        run: gradle build
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Upload JAR
+      - name: Build Velocity Client
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace
+
+      - name: Check installer script syntax
+        shell: pwsh
+        run: |
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("$PWD/installer/velocity-installer.ps1", [ref]$null, [ref]$errors)
+          if ($errors) { $errors | ForEach-Object { Write-Error $_.ToString() }; exit 1 }
+          Write-Host 'Installer script parses OK'
+
+      - name: Package download
+        run: |
+          mkdir -p dist
+          cp build/libs/velocity-client-*.jar dist/
+          cp installer/* dist/
+          cp README.md dist/
+
+      - name: Upload Velocity Client
         uses: actions/upload-artifact@v4
         with:
           name: Velocity-Client
-          path: build/libs/*.jar
+          path: dist/
+
+      - name: Zip for release
+        if: env.RELEASE_TAG != ''
+        run: |
+          cd dist && zip -r "../Velocity-Client-${RELEASE_TAG}.zip" . && cd ..
+
+      - name: Publish release
+        if: env.RELEASE_TAG != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Velocity Client ${{ env.RELEASE_TAG }}
+          make_latest: true
+          body: |
+            ## ⚡ Velocity Client ${{ env.RELEASE_TAG }} for Minecraft 1.21.1 (Fabric)
+
+            **Easiest:** download `Velocity-Client-${{ env.RELEASE_TAG }}.zip`, unzip it, double-click `Install-Velocity.bat`,
+            then pick **Velocity Client** in the Minecraft Launcher. In game, press **Right Shift**.
+
+            **Only the mod:** download the `velocity-client-*.jar` below and put it in your Fabric 1.21.1 `mods` folder
+            (needs Fabric API).
+
+            Chrome may warn about `.jar`/`.zip` files because they can contain programs. Open `chrome://downloads` and choose **Keep**.
+            If Windows says "Windows protected your PC", click **More info → Run anyway**.
+          files: |
+            Velocity-Client-${{ env.RELEASE_TAG }}.zip
+            dist/*
+
+  # Starts the real game on a virtual screen, opens every Velocity screen, screenshots it and quits.
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Install virtual display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
+
+      - name: Run Minecraft with Velocity
+        env:
+          VELOCITY_SMOKE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --stacktrace 2>&1 | tee run.log
+          grep -q "VELOCITY SMOKE TEST PASSED" run.log
+
+      - name: Upload screenshots and log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Smoke-Test-Screenshots
+          path: |
+            run/screenshots/
+            run/logs/latest.log
+            run/crash-reports/
+          if-no-files-found: ignore
+
+

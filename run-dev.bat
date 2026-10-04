@@ -1,2 +1,2 @@
 @echo off
-call gradlew.bat runClient
+call "%~dp0gradlew.bat" runClient
