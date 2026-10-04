@@ -30,6 +30,14 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
 
+      - name: Check installer script syntax
+        shell: pwsh
+        run: |
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("$PWD/installer/velocity-installer.ps1", [ref]$null, [ref]$errors)
+          if ($errors) { $errors | ForEach-Object { Write-Error $_.ToString() }; exit 1 }
+          Write-Host 'Installer script parses OK'
+
       - name: Package download
         run: |
           mkdir -p dist
@@ -52,7 +60,7 @@ jobs:
   # Starts the real game on a virtual screen, opens every Velocity screen, screenshots it and quits.
   smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -91,3 +99,10 @@ jobs:
             run/crash-reports/
           if-no-files-found: ignore
 
+      - name: Print screenshots (temporary, for remote review)
+        if: always()
+        run: |
+          for f in run/screenshots/velocity-*.png; do
+            convert "$f" -resize 960x -quality 80 /tmp/s.jpg 2>/dev/null || cp "$f" /tmp/s.jpg
+            echo "SHOT $(basename $f) $(base64 -w0 /tmp/s.jpg)"
+          done

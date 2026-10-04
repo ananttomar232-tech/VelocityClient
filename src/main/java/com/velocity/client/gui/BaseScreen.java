@@ -7,7 +7,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -24,6 +26,8 @@ public abstract class BaseScreen extends Screen {
     protected float delta;
     private long lastFrame = System.nanoTime();
     protected final long openedAt = System.currentTimeMillis();
+
+    private final Map<Object, Float> animations = new HashMap<>();
 
     private record Region(int x1, int y1, int x2, int y2, Consumer<Integer> action) {}
 
@@ -44,6 +48,7 @@ public abstract class BaseScreen extends Screen {
         this.mouseY = mouseY;
         regions.clear();
         draw(ctx);
+        Notifications.render(ctx, width, height);
         lastRegions.clear();
         lastRegions.addAll(regions);
     }
@@ -122,11 +127,23 @@ public abstract class BaseScreen extends Screen {
         click(x, y, w, h, action);
     }
 
-    /** Pill shaped on/off switch. */
-    protected void toggle(DrawContext ctx, int x, int y, boolean on, Runnable action) {
+    /** Smoothly moves a stored 0..1 value toward target; key identifies the animated thing. */
+    protected float animate(Object key, boolean target, float speed) {
+        float v = animations.getOrDefault(key, target ? 1f : 0f);
+        v = shouldAnimate() ? Gfx.approach(v, target ? 1f : 0f, speed, delta) : (target ? 1f : 0f);
+        animations.put(key, v);
+        return v;
+    }
+
+    /** Pill shaped on/off switch whose knob slides and colour fades. */
+    protected void toggle(DrawContext ctx, Object key, int x, int y, boolean on, Runnable action) {
         int w = 22, h = 11;
-        Gfx.roundRect(ctx, x, y, w, h, 5, on ? Gfx.accent() : 0xFF3A4052);
-        int knob = on ? x + w - 10 : x + 1;
+        float t = animate("toggle:" + System.identityHashCode(key), on, 16f);
+        boolean hover = hovered(x - 2, y - 2, w + 4, h + 4);
+        int track = Gfx.mix(0xFF3A4052, Gfx.accent(), t);
+        if (hover) track = Gfx.mix(track, 0xFFFFFFFF, 0.12f);
+        Gfx.roundRect(ctx, x, y, w, h, 5, track);
+        int knob = x + 1 + Math.round((w - 11) * t);
         Gfx.roundRect(ctx, knob, y + 1, 9, 9, 4, 0xFFFFFFFF);
         click(x - 2, y - 2, w + 4, h + 4, action);
     }

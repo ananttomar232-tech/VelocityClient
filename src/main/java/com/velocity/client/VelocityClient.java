@@ -4,6 +4,8 @@ import com.velocity.client.gui.HudEditorScreen;
 import com.velocity.client.gui.VelocityMenuScreen;
 import com.velocity.client.module.ModuleManager;
 import com.velocity.client.module.impl.FullbrightModule;
+import com.velocity.client.theme.DarkTextures;
+import com.velocity.client.util.CombatTracker;
 import com.velocity.client.util.FpsTracker;
 import com.velocity.client.util.Gfx;
 import com.velocity.client.util.PerformancePresets;
@@ -15,7 +17,11 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.util.ActionResult;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -36,6 +42,8 @@ public final class VelocityClient implements ClientModInitializer {
             new KeyBinding("key.velocity.open_menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.velocity"));
     public static final KeyBinding ZOOM_KEY = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.velocity.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, "category.velocity"));
+    public static final KeyBinding FREELOOK_KEY = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding("key.velocity.freelook", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category.velocity"));
     public static final KeyBinding HUD_EDITOR = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.velocity.hud_editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "category.velocity"));
 
@@ -44,6 +52,13 @@ public final class VelocityClient implements ClientModInitializer {
         ModuleManager.init();
         VelocityConfig.load();
         LOGGER.info("{} {} ready with {} mods", NAME, version(), ModuleManager.all().size());
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new DarkTextures());
+
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (world.isClient) CombatTracker.onAttack(player, entity);
+            return ActionResult.PASS;
+        });
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             if (!VelocityConfig.firstRunDone) {
@@ -62,6 +77,7 @@ public final class VelocityClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             FpsTracker.tick(client);
+            CombatTracker.tick(client);
             if (SmokeTest.enabled()) SmokeTest.tick(client);
             ModuleManager.tick(client);
             while (OPEN_MENU.wasPressed()) {

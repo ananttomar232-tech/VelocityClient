@@ -26,13 +26,22 @@ public final class ModuleManager {
         MODULES.add(new DirectionModule());
         MODULES.add(new SpeedModule());
         MODULES.add(new ServerAddressModule());
+        MODULES.add(new BiomeModule());
+        MODULES.add(new DayCounterModule());
         // PvP
         MODULES.add(new KeystrokesModule());
         MODULES.add(new CpsModule());
         MODULES.add(new ToggleSprintModule());
+        MODULES.add(new CrosshairModule());
+        MODULES.add(new ReachDisplayModule());
+        MODULES.add(new ComboModule());
+        MODULES.add(new NoHurtCamModule());
+        MODULES.add(new LowFireModule());
         // Utility
         MODULES.add(new ZoomModule());
         MODULES.add(new FullbrightModule());
+        MODULES.add(new FreelookModule());
+        MODULES.add(new NoPumpkinModule());
         // Performance
         MODULES.add(new DynamicFpsModule());
         MODULES.add(new LowSpecMenusModule());
@@ -75,5 +84,6 @@ public final class ModuleManager {
         for (HudModule hud : hudModules()) {
             if (hud.isEnabled() && hud.hasContent(client)) hud.render(ctx, client, sw, sh, false);
         }
+        com.velocity.client.gui.Notifications.render(ctx, sw, sh);
     }
 }

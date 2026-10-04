@@ -2,5 +2,6 @@
   "category.velocity": "Velocity Client",
   "key.velocity.open_menu": "Open Velocity Menu",
   "key.velocity.zoom": "Zoom",
-  "key.velocity.hud_editor": "Open HUD Editor"
+  "key.velocity.hud_editor": "Open HUD Editor",
+  "key.velocity.freelook": "Freelook (hold)"
 }

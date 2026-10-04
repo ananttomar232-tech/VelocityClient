@@ -45,7 +45,15 @@ public final class VelocityMenuScreen extends BaseScreen {
             new PerfMod("lithium", "lithium", "Lithium", "Faster game logic, smoother singleplayer"),
             new PerfMod("ferritecore", "ferrite-core", "FerriteCore", "Uses a lot less RAM"),
             new PerfMod("immediatelyfast", "immediatelyfast", "ImmediatelyFast", "Faster HUD, text and item rendering"),
-            new PerfMod("entityculling", "entityculling", "EntityCulling", "Skips drawing entities you can't see"));
+            new PerfMod("entityculling", "entityculling", "EntityCulling", "Skips drawing entities you can't see"),
+            new PerfMod("modernfix", "modernfix", "ModernFix", "Faster startup, less RAM"),
+            new PerfMod("krypton", "krypton", "Krypton", "Lighter, faster networking"),
+            new PerfMod("noisium", "noisium", "Noisium", "Faster world generation"),
+            new PerfMod("badoptimizations", "badoptimizations", "BadOptimizations", "Many small CPU savings"));
+
+    private static final List<PerfMod> EXTRA_MODS = List.of(
+            new PerfMod("iris", "iris", "Iris Shaders", "Shaders - try MakeUp Ultra Fast on laptops"),
+            new PerfMod("entity_model_features", "entity-model-features", "EMF + ETF", "Needed by Fresh Animations"));
 
     private static Page lastPage = Page.MODS;
 
@@ -54,11 +62,12 @@ public final class VelocityMenuScreen extends BaseScreen {
     private Module selected = null;
     private TextFieldWidget search;
 
+    private long pageChangedAt = System.currentTimeMillis();
+    private int measuredHeight = 300;
     private float scroll;
     private float targetScroll;
     private int maxScroll;
 
-    private final Map<Object, Float> hoverAnim = new HashMap<>();
     private DoubleConsumer activeSlider;
     private int activeSliderX;
     private int activeSliderW;
@@ -93,13 +102,11 @@ public final class VelocityMenuScreen extends BaseScreen {
     private int py() { return (height - ph()) / 2 + Math.round((1 - openProgress()) * 14); }
 
     private float anim(Object key, boolean target, float speed) {
-        float v = hoverAnim.getOrDefault(key, target ? 1f : 0f);
-        v = shouldAnimate() ? Gfx.approach(v, target ? 1f : 0f, speed, delta) : (target ? 1f : 0f);
-        hoverAnim.put(key, v);
-        return v;
+        return animate(key, target, speed);
     }
 
     private void switchPage(Page next) {
+        pageChangedAt = System.currentTimeMillis();
         page = next;
         lastPage = next;
         selected = null;
@@ -126,7 +133,9 @@ public final class VelocityMenuScreen extends BaseScreen {
         drawHeader(ctx, px, py, pw);
         ctx.fill(px + 8, py + 28, px + pw - 8, py + 29, Gfx.STROKE);
 
-        int cx = px + 10, cy = py + 34, cw = pw - 20, ch = ph - 42;
+        // Content slides in a little whenever the page changes.
+        float pageT = shouldAnimate() ? Gfx.easeOutCubic((System.currentTimeMillis() - pageChangedAt) / 260f) : 1f;
+        int cx = px + 10 + Math.round((1 - pageT) * 14), cy = py + 34, cw = pw - 20, ch = ph - 42;
         scroll = shouldAnimate() ? Gfx.approach(scroll, targetScroll, 22f, delta) : targetScroll;
 
         search.visible = page == Page.MODS && selected == null;
@@ -247,6 +256,11 @@ public final class VelocityMenuScreen extends BaseScreen {
             int col = i % cols, row = i / cols;
             int x0 = cx + col * (cardW + gap);
             int y0 = gy + row * (cardH + gap) - Math.round(scroll);
+            if (shouldAnimate()) {
+                // Cards pop in one after another.
+                float t = Gfx.easeOutCubic((System.currentTimeMillis() - pageChangedAt - i * 22) / 280f);
+                y0 += Math.round((1 - t) * 18);
+            }
             if (y0 + cardH < gy || y0 > gy + gh) continue;
             drawCard(ctx, modules.get(i), x0, y0, cardW, cardH);
         }
@@ -265,8 +279,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         // Whole card: left click toggles, right click opens options
         region(x, y, w, h, button -> {
             if (button == 1) openOptions(m);
-            else if (button == 0) m.toggle();
-            VelocityConfig.save();
+            else if (button == 0) toggleModule(m);
         });
 
         int lift = Math.round(hv * 2);
@@ -285,11 +298,20 @@ public final class VelocityMenuScreen extends BaseScreen {
         boolean togHover = hovered(bx, y + 63, bw, 12);
         Gfx.roundRect(ctx, bx, y + 63, bw, 12, 3, togHover ? Gfx.mix(toggleColor, 0xFFFFFFFF, 0.15f) : toggleColor);
         Gfx.scaledCentered(ctx, textRenderer, m.isEnabled() ? "ENABLED" : "DISABLED", x + w / 2, y + 66, 0.75f, 0xFFFFFFFF);
-        click(bx, y + 63, bw, 12, () -> { m.toggle(); VelocityConfig.save(); });
+        click(bx, y + 63, bw, 12, () -> toggleModule(m));
+    }
+
+    private void toggleModule(Module m) {
+        m.toggle();
+        VelocityConfig.save();
+        if (VelocityConfig.notifications) {
+            Notifications.push(m.getName() + (m.isEnabled() ? " enabled" : " disabled"), m.isEnabled() ? Gfx.GREEN : Gfx.RED);
+        }
     }
 
     private void openOptions(Module m) {
         selected = m;
+        pageChangedAt = System.currentTimeMillis();
         scroll = targetScroll = 0;
         setFocused(null);
     }
@@ -306,7 +328,7 @@ public final class VelocityMenuScreen extends BaseScreen {
 
     private void drawOptions(DrawContext ctx, int cx, int cy, int cw, int ch) {
         Module m = selected;
-        button(ctx, cx, cy, 44, 14, "← Back", 0xFF2A3042, () -> { selected = null; scroll = targetScroll = 0; });
+        button(ctx, cx, cy, 44, 14, "← Back", 0xFF2A3042, () -> { selected = null; scroll = targetScroll = 0; pageChangedAt = System.currentTimeMillis(); });
 
         Gfx.item(ctx, m.getIcon(), cx + 52, cy - 2, 1f);
         ctx.drawText(textRenderer, Text.literal(m.getName()).formatted(Formatting.BOLD), cx + 72, cy, 0xFFFFFFFF, true);
@@ -317,7 +339,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         if (textRenderer.getWidth(desc) > descMax) desc = textRenderer.trimToWidth(desc, descMax - 8) + "..";
         Gfx.text(ctx, textRenderer, desc, cx + 72, cy + 10, Gfx.MUTED);
         Gfx.text(ctx, textRenderer, status, statusX, cy + 2, m.isEnabled() ? Gfx.GREEN : Gfx.RED);
-        toggle(ctx, cx + cw - 24, cy + 1, m.isEnabled(), () -> { m.toggle(); VelocityConfig.save(); });
+        toggle(ctx, m, cx + cw - 24, cy + 1, m.isEnabled(), () -> toggleModule(m));
 
         int top = cy + 26, viewH = ch - 26;
         ctx.fill(cx, top - 4, cx + cw, top - 3, Gfx.STROKE);
@@ -357,7 +379,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         Gfx.text(ctx, textRenderer, s.getName(), x + 7, y + (h - 8) / 2, 0xFFFFFFFF);
         int right = x + w - 7;
         if (s instanceof BoolSetting b) {
-            toggle(ctx, right - 22, y + (h - 11) / 2, b.isOn(), () -> { b.toggle(); VelocityConfig.save(); });
+            toggle(ctx, b, right - 22, y + (h - 11) / 2, b.isOn(), () -> { b.toggle(); VelocityConfig.save(); });
         } else if (s instanceof NumberSetting n) {
             int sw = Math.min(120, w / 3);
             int sx = right - sw;
@@ -398,7 +420,7 @@ public final class VelocityMenuScreen extends BaseScreen {
     // ------------------------------------------------------------------ PERFORMANCE page
 
     private void drawPerformance(DrawContext ctx, int cx, int cy, int cw, int ch) {
-        int contentH = 360;
+        int contentH = measuredHeight;
         maxScroll = Math.max(0, contentH - ch);
         targetScroll = Math.max(0, Math.min(maxScroll, targetScroll));
         clip(ctx, cx - 2, cy, cx + cw + 2, cy + ch);
@@ -467,21 +489,36 @@ public final class VelocityMenuScreen extends BaseScreen {
         section(ctx, "RECOMMENDED FPS MODS", cx, y);
         Gfx.scaledText(ctx, textRenderer, "the Velocity installer adds these for you", cx + 115, y + 1, 0.75f, Gfx.MUTED);
         y += 12;
-        for (PerfMod mod : PERF_MODS) {
+        y = perfModRows(ctx, PERF_MODS, cx, y, cw);
+
+        y += 6;
+        section(ctx, "SHADERS & ANIMATIONS", cx, y);
+        Gfx.scaledText(ctx, textRenderer, "optional in the installer - shaders cost FPS on integrated graphics", cx + 120, y + 1, 0.75f, Gfx.MUTED);
+        y += 12;
+        y = perfModRows(ctx, EXTRA_MODS, cx, y, cw);
+        measuredHeight = y + 6 + Math.round(scroll) - cy;
+        unclip(ctx);
+        drawScrollbar(ctx, cx + cw + 3, cy, ch, contentH);
+    }
+
+    private int perfModRows(DrawContext ctx, List<PerfMod> mods, int cx, int y, int cw) {
+        for (PerfMod mod : mods) {
             boolean installed = FabricLoader.getInstance().isModLoaded(mod.modId());
             Gfx.roundRect(ctx, cx, y, cw, 18, 3, 0xFF1B1F2B);
             Gfx.text(ctx, textRenderer, mod.name(), cx + 7, y + 5, 0xFFFFFFFF);
-            Gfx.text(ctx, textRenderer, mod.description(), cx + 95, y + 5, Gfx.MUTED);
+            String desc = mod.description();
+            int max = cw - 112 - 70;
+            if (textRenderer.getWidth(desc) > max) desc = textRenderer.trimToWidth(desc, max - 8) + "..";
+            Gfx.text(ctx, textRenderer, desc, cx + 112, y + 5, Gfx.MUTED);
             if (installed) {
-                Gfx.text(ctx, textRenderer, "✔ Installed", cx + cw - 64, y + 5, Gfx.GREEN);
+                Gfx.text(ctx, textRenderer, "\u2714 Installed", cx + cw - 64, y + 5, Gfx.GREEN);
             } else {
                 button(ctx, cx + cw - 50, y + 2, 46, 14, "Get", Gfx.accent(), () ->
                         Util.getOperatingSystem().open(URI.create("https://modrinth.com/mod/" + mod.slug() + "/versions?g=1.21.1&l=fabric")));
             }
             y += 20;
         }
-        unclip(ctx);
-        drawScrollbar(ctx, cx + cw + 3, cy, ch, contentH);
+        return y;
     }
 
     private void drawGraph(DrawContext ctx, int x, int y, int w, int h) {
@@ -511,7 +548,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         Gfx.item(ctx, m.getIcon(), x + 3, y + 2, 1f);
         Gfx.text(ctx, textRenderer, m.getName(), x + 23, y + 6, 0xFFFFFFFF);
         Gfx.text(ctx, textRenderer, m.getDescription(), x + 23 + textRenderer.getWidth(m.getName()) + 8, y + 6, Gfx.MUTED);
-        toggle(ctx, x + w - 28, y + 5, m.isEnabled(), () -> { m.toggle(); VelocityConfig.save(); });
+        toggle(ctx, m, x + w - 28, y + 5, m.isEnabled(), () -> toggleModule(m));
     }
 
     private void section(DrawContext ctx, String title, int x, int y) {
@@ -521,7 +558,7 @@ public final class VelocityMenuScreen extends BaseScreen {
     // ------------------------------------------------------------------ SETTINGS page
 
     private void drawSettings(DrawContext ctx, int cx, int cy, int cw, int ch) {
-        int contentH = 230;
+        int contentH = measuredHeight;
         maxScroll = Math.max(0, contentH - ch);
         targetScroll = Math.max(0, Math.min(maxScroll, targetScroll));
         clip(ctx, cx - 2, cy, cx + cw + 2, cy + ch);
@@ -545,6 +582,7 @@ public final class VelocityMenuScreen extends BaseScreen {
         y += 12;
         y = boolRow(ctx, "Velocity main menu", VelocityConfig.customMainMenu, () -> VelocityConfig.customMainMenu = !VelocityConfig.customMainMenu, cx, y, cw);
         y = boolRow(ctx, "Menu animations", VelocityConfig.animations, () -> VelocityConfig.animations = !VelocityConfig.animations, cx, y, cw);
+        y = boolRow(ctx, "Toast notifications", VelocityConfig.notifications, () -> VelocityConfig.notifications = !VelocityConfig.notifications, cx, y, cw);
 
         Gfx.roundRect(ctx, cx, y + 1, cw, 20, 3, 0xFF1B1F2B);
         Gfx.text(ctx, textRenderer, "Chroma speed", cx + 7, y + 7, 0xFFFFFFFF);
@@ -553,6 +591,17 @@ public final class VelocityMenuScreen extends BaseScreen {
         slider(ctx, cx + cw - 127, y + 11, 120, (VelocityConfig.chromaSpeed - 0.2) / 2.8,
                 p -> VelocityConfig.chromaSpeed = Math.round((0.2 + Math.max(0, Math.min(1, p)) * 2.8) * 10) / 10.0);
         y += 26;
+
+        section(ctx, "INTERFACE THEME", cx, y);
+        Gfx.scaledText(ctx, textRenderer, "restyles Minecraft's own screens too", cx + 92, y + 1, 0.75f, Gfx.MUTED);
+        y += 12;
+        y = boolRow(ctx, "Velocity buttons & menus everywhere", VelocityConfig.uiTheme, () -> VelocityConfig.uiTheme = !VelocityConfig.uiTheme, cx, y, cw);
+        y = boolRow(ctx, "Dark inventories & advancements", VelocityConfig.darkInventories, () -> {
+            VelocityConfig.darkInventories = !VelocityConfig.darkInventories;
+            com.velocity.client.theme.DarkTextures.apply();
+        }, cx, y, cw);
+        y = boolRow(ctx, "Fade in screens", VelocityConfig.screenAnimations, () -> VelocityConfig.screenAnimations = !VelocityConfig.screenAnimations, cx, y, cw);
+        y += 4;
 
         section(ctx, "QUICK ACTIONS", cx, y);
         y += 12;
@@ -565,13 +614,15 @@ public final class VelocityMenuScreen extends BaseScreen {
         });
         y += 22;
         Gfx.text(ctx, textRenderer, "Drop any Fabric 1.21.1 mod into the mods folder - Velocity works alongside it.", cx, y, Gfx.MUTED);
+        measuredHeight = y + 14 + Math.round(scroll) - cy;
         unclip(ctx);
+        drawScrollbar(ctx, cx + cw + 3, cy, ch, contentH);
     }
 
     private int boolRow(DrawContext ctx, String label, boolean value, Runnable flip, int x, int y, int w) {
         Gfx.roundRect(ctx, x, y + 1, w, 20, 3, 0xFF1B1F2B);
         Gfx.text(ctx, textRenderer, label, x + 7, y + 7, 0xFFFFFFFF);
-        toggle(ctx, x + w - 29, y + 6, value, () -> { flip.run(); VelocityConfig.save(); });
+        toggle(ctx, label, x + w - 29, y + 6, value, () -> { flip.run(); VelocityConfig.save(); });
         return y + 22;
     }
 

@@ -87,6 +87,12 @@ public final class Gfx {
         return (Math.max(0, Math.min(255, alpha)) << 24) | (color & 0xFFFFFF);
     }
 
+    /** Multiplies a colour's alpha by factor (0..1). */
+    public static int fade(int color, float factor) {
+        int a = Math.round((color >>> 24) * Math.max(0, Math.min(1, factor)));
+        return a << 24 | (color & 0xFFFFFF);
+    }
+
     public static int mix(int a, int b, float t) {
         t = Math.max(0, Math.min(1, t));
         int aa = a >>> 24, ar = a >> 16 & 255, ag = a >> 8 & 255, ab = a & 255;

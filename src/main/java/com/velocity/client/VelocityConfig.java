@@ -31,6 +31,14 @@ public final class VelocityConfig {
     public static double chromaSpeed = 1.0;
     public static boolean firstRunDone = false;
     public static String preset = "Balanced";
+    /** Restyle vanilla buttons, sliders and menu backgrounds with the Velocity look. */
+    public static boolean uiTheme = true;
+    /** Dark recolour of inventory / container / advancement windows. */
+    public static boolean darkInventories = true;
+    /** Fade vanilla screens in when they open. */
+    public static boolean screenAnimations = true;
+    /** Toasts like "Zoom enabled". */
+    public static boolean notifications = true;
 
     private VelocityConfig() {}
 
@@ -53,6 +61,10 @@ public final class VelocityConfig {
             chromaSpeed = root.has("chromaSpeed") ? root.get("chromaSpeed").getAsDouble() : chromaSpeed;
             firstRunDone = getBool(root, "firstRunDone", firstRunDone);
             preset = root.has("preset") ? root.get("preset").getAsString() : preset;
+            uiTheme = getBool(root, "uiTheme", uiTheme);
+            darkInventories = getBool(root, "darkInventories", darkInventories);
+            screenAnimations = getBool(root, "screenAnimations", screenAnimations);
+            notifications = getBool(root, "notifications", notifications);
 
             JsonObject modules = root.has("modules") ? root.getAsJsonObject("modules") : new JsonObject();
             for (Module module : ModuleManager.all()) {
@@ -82,6 +94,10 @@ public final class VelocityConfig {
         root.addProperty("chromaSpeed", chromaSpeed);
         root.addProperty("firstRunDone", firstRunDone);
         root.addProperty("preset", preset);
+        root.addProperty("uiTheme", uiTheme);
+        root.addProperty("darkInventories", darkInventories);
+        root.addProperty("screenAnimations", screenAnimations);
+        root.addProperty("notifications", notifications);
 
         JsonObject modules = new JsonObject();
         for (Module module : ModuleManager.all()) {
