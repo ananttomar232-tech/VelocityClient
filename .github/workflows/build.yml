@@ -90,3 +90,11 @@ jobs:
             run/logs/latest.log
             run/crash-reports/
           if-no-files-found: ignore
+
+      - name: Print screenshots (temporary, for remote review)
+        if: always()
+        run: |
+          for f in run/screenshots/velocity-*.png; do
+            convert "$f" -resize 960x -quality 80 /tmp/s.jpg 2>/dev/null || cp "$f" /tmp/s.jpg
+            echo "SHOT $(basename $f) $(base64 -w0 /tmp/s.jpg)"
+          done
