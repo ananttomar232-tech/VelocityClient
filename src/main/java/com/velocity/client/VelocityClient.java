@@ -94,7 +94,7 @@ public final class VelocityClient implements ClientModInitializer {
             if (screen instanceof TitleScreen || screen instanceof GameMenuScreen) {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("⚡ Velocity").withColor(Gfx.accent() & 0xFFFFFF),
                                 b -> client.setScreen(new VelocityMenuScreen(screen)))
-                        .dimensions(6, 6, 84, 20)
+                        .dimensions(6, scaledHeight - 26, 84, 20)
                         .build());
             }
         });

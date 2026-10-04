@@ -6,9 +6,11 @@ It works with normal Fabric mods: drop them in the mods folder.
 
 | Main menu | Mods |
 | --- | --- |
-| ![Main menu](docs/velocity-1-title.png) | ![Mods](docs/velocity-2-mods.png) |
-| **Performance** | **HUD Editor** |
-| ![Performance](docs/velocity-3-performance.png) | ![HUD editor](docs/velocity-6-hud-editor.png) |
+| ![Main menu](docs/velocity-01-title.png) | ![Mods](docs/velocity-02-mods.png) |
+| **In game** | **Dark inventory** |
+| ![HUD](docs/velocity-07-ingame-hud.png) | ![Inventory](docs/velocity-10-inventory.png) |
+| **Themed pause menu** | **Performance** |
+| ![Pause](docs/velocity-12-pause.png) | ![Performance](docs/velocity-03-performance.png) |
 
 *These are real screenshots from the automated CI test, which launches the game on every push.*
 
@@ -24,8 +26,11 @@ It works with normal Fabric mods: drop them in the mods folder.
 The installer:
 
 - installs Fabric Loader for 1.21.1
-- downloads Fabric API and the best FPS mods from Modrinth: **Sodium**, **Lithium**, **FerriteCore**,
-  **ImmediatelyFast** and **EntityCulling**, plus **Mod Menu**
+- downloads Fabric API and lightweight FPS mods from Modrinth: **Sodium**, **Lithium**, **FerriteCore**,
+  **ImmediatelyFast**, **EntityCulling**, **ModernFix**, **Krypton**, **Noisium** and **BadOptimizations**, plus **Mod Menu**
+- asks whether you want **Iris shaders** with the very light **MakeUp Ultra Fast** pack (off by default, because
+  shaders cost a lot of FPS on integrated graphics)
+- asks whether you want **Fresh Animations** (smooth mob animations, with EMF + ETF), and switches it on for you
 - creates a separate game folder `%APPDATA%\.velocity`, so your normal Minecraft is not touched
 - adds a launcher profile with a 4 GB heap and low-pause G1 garbage collection, tuned for 16 GB RAM
 
@@ -37,6 +42,7 @@ Running it again updates everything.
 | --- | --- |
 | **Right Shift** | Open the Velocity menu |
 | **C** (hold) | Zoom. Scroll while zooming to zoom further |
+| **Left Alt** (hold) | Freelook - look around your character |
 | Sprint key (tap) | Toggle Sprint on/off |
 | *unbound* | HUD Editor (set it in Controls) |
 
@@ -48,6 +54,10 @@ You can change any of these in **Options → Controls → Key Binds → Velocity
 It also has category filters (HUD / PvP / Utility / Performance) and search: start typing on the Mods page.
 Seven accent colours, smooth animations and a custom main menu.
 
+**Whole-game theme**: every vanilla button and slider gets the Velocity style with hover animations.
+Menus get dark backgrounds, and inventories, chests, furnaces and the advancements window are recoloured dark.
+In-game screens fade in. You can switch each part off in **Settings → Interface Theme**.
+
 **HUD Editor**: drag elements anywhere. They snap to the screen centre, the edges and each other.
 Scroll over an element to resize it, or right-click it for its options.
 Every HUD mod has Scale, Background and Text Color (White / Accent / Chroma rainbow) settings.
@@ -55,10 +65,11 @@ Every HUD mod has Scale, Background and Text Color (White / Accent / Chroma rain
 | HUD | PvP | Utility | Performance |
 | --- | --- | --- | --- |
 | FPS | Keystrokes (with CPS) | Zoom | Dynamic FPS |
-| Coordinates | CPS | Fullbright | No Menu Blur |
-| Armor Status | Toggle Sprint | | Memory |
-| Potion Effects | | | One-click presets |
-| Ping, Clock, Direction, Speed, Server IP | | | Live FPS graph |
+| Coordinates | CPS | Freelook | No Menu Blur |
+| Armor Status | Toggle Sprint | Fullbright | Memory |
+| Potion Effects | Custom Crosshair | No Pumpkin Blur | One-click presets |
+| Ping, Clock, Direction, Speed | Reach Display | | Live FPS graph |
+| Server IP, Biome, Day Counter | Combo Counter, No Hurt Cam, Low Fire | | |
 
 ## Getting the most FPS (i3 10th gen + Intel UHD + 16 GB)
 
