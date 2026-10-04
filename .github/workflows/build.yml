@@ -100,10 +100,3 @@ jobs:
           if-no-files-found: ignore
 
 
-      - name: Print screenshots (temporary, for remote review)
-        if: always()
-        run: |
-          for f in run/screenshots/velocity-07*.png run/screenshots/velocity-10*.png; do
-            convert "$f" -quality 92 /tmp/s.jpg 2>/dev/null || cp "$f" /tmp/s.jpg
-            echo "SHOT $(basename $f) $(base64 -w0 /tmp/s.jpg)"
-          done

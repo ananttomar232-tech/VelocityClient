@@ -65,7 +65,7 @@ Menus get dark backgrounds, and inventories, chests, furnaces and the advancemen
 In-game screens fade in. You can switch each part off in **Settings → Interface Theme**.
 
 **Built-in resource packs**, drawn for Velocity and switched on by default (toggle in **Settings** or Options → Resource Packs):
-- **Velocity Icons**: flat hearts (every type: poison, wither, absorption, frozen, hardcore), hunger, armor,
+- **Velocity Icons**: smooth HD (4× resolution) hearts (every type: poison, wither, absorption, frozen, hardcore), hunger, armor,
   air bubbles, a see-through rounded hotbar, a gradient XP bar and a clean crosshair.
 - **Velocity Clear Glass**: glass and all 16 stained glass colours without the streaks.
 
