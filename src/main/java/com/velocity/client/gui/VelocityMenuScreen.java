@@ -115,6 +115,7 @@ public final class VelocityMenuScreen extends BaseScreen {
 
     @Override
     protected void draw(DrawContext ctx) {
+        drawBackdrop(ctx);
         float open = openProgress();
         ctx.fill(0, 0, width, height, Gfx.withAlpha(0x090B10, Math.round(175 * open)));
 
@@ -392,7 +393,7 @@ public final class VelocityMenuScreen extends BaseScreen {
     // ------------------------------------------------------------------ PERFORMANCE page
 
     private void drawPerformance(DrawContext ctx, int cx, int cy, int cw, int ch) {
-        int contentH = 330;
+        int contentH = 360;
         maxScroll = Math.max(0, contentH - ch);
         targetScroll = Math.max(0, Math.min(maxScroll, targetScroll));
         clip(ctx, cx - 2, cy, cx + cw + 2, cy + ch);

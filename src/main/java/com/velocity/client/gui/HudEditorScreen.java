@@ -39,6 +39,7 @@ public final class HudEditorScreen extends BaseScreen {
 
     @Override
     protected void draw(DrawContext ctx) {
+        drawBackdrop(ctx);
         float open = openProgress();
         ctx.fill(0, 0, width, height, Gfx.withAlpha(0x000000, Math.round(90 * open)));
 

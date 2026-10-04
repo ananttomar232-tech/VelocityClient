@@ -53,6 +53,14 @@ public abstract class BaseScreen extends Screen {
         // Velocity draws its own lightweight background (no blur pass = more FPS on integrated graphics).
     }
 
+    /** Out of a world there is nothing behind the menu, so show the rotating panorama like the main menu. */
+    protected void drawBackdrop(DrawContext ctx) {
+        if (client != null && client.world == null) {
+            renderPanoramaBackground(ctx, delta * 20f);
+            ctx.fill(0, 0, width, height, 0x66080A10);
+        }
+    }
+
     /** 0..1 progress of the open animation. */
     protected float openProgress() {
         if (!VelocityConfig.animations) return 1f;
