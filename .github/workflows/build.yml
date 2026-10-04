@@ -51,11 +51,31 @@ jobs:
           name: Velocity-Client
           path: dist/
 
+      - name: Zip for release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd dist && zip -r "../Velocity-Client-${GITHUB_REF_NAME}.zip" . && cd ..
+
       - name: Publish release (tags v*)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          name: Velocity Client ${{ github.ref_name }}
+          make_latest: true
+          body: |
+            ## ⚡ Velocity Client ${{ github.ref_name }} for Minecraft 1.21.1 (Fabric)
+
+            **Easiest:** download `Velocity-Client-${{ github.ref_name }}.zip`, unzip it, double-click `Install-Velocity.bat`,
+            then pick **Velocity Client** in the Minecraft Launcher. In game, press **Right Shift**.
+
+            **Only the mod:** download the `velocity-client-*.jar` below and put it in your Fabric 1.21.1 `mods` folder
+            (needs Fabric API).
+
+            Chrome may warn about `.jar`/`.zip` files because they can contain programs. Open `chrome://downloads` and choose **Keep**.
+            If Windows says "Windows protected your PC", click **More info → Run anyway**.
+          files: |
+            Velocity-Client-${{ github.ref_name }}.zip
+            dist/*
 
   # Starts the real game on a virtual screen, opens every Velocity screen, screenshots it and quits.
   smoke-test:
