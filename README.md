@@ -4,7 +4,13 @@ A fast, clean and fun Minecraft Java client for **1.21.1**, built on Fabric.
 It has a Feather-style mod menu, a drag-and-drop HUD editor, PvP mods and FPS boosters tuned for low-end PCs.
 It works with normal Fabric mods: drop them in the mods folder.
 
-![menu](installer/velocity.png)
+| Main menu | Mods |
+| --- | --- |
+| ![Main menu](docs/velocity-1-title.png) | ![Mods](docs/velocity-2-mods.png) |
+| **Performance** | **HUD Editor** |
+| ![Performance](docs/velocity-3-performance.png) | ![HUD editor](docs/velocity-6-hud-editor.png) |
+
+*These are real screenshots from the automated CI test, which launches the game on every push.*
 
 ## Install (Windows, one click)
 
