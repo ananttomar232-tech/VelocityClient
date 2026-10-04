@@ -31,6 +31,12 @@ The installer:
 - asks whether you want **Iris shaders** with the very light **MakeUp Ultra Fast** pack (off by default, because
   shaders cost a lot of FPS on integrated graphics)
 - asks whether you want **Fresh Animations** (smooth mob animations, with EMF + ETF), and switches it on for you
+- asks whether you want light **animation mods**: Not Enough Animations, Eating Animation, Smooth Swapping,
+  Wavey Capes, Animatica and Falling Leaves (with Cloth Config)
+- asks whether you want lightweight **resource packs**: **Icons**, **Animated Items** and **xali's Enchanted Books**,
+  and switches them on
+
+Everything it installs is client-side only, so it works on any server.
 - creates a separate game folder `%APPDATA%\.velocity`, so your normal Minecraft is not touched
 - adds a launcher profile with a 4 GB heap and low-pause G1 garbage collection, tuned for 16 GB RAM
 
@@ -57,6 +63,14 @@ Seven accent colours, smooth animations and a custom main menu.
 **Whole-game theme**: every vanilla button and slider gets the Velocity style with hover animations.
 Menus get dark backgrounds, and inventories, chests, furnaces and the advancements window are recoloured dark.
 In-game screens fade in. You can switch each part off in **Settings → Interface Theme**.
+
+**Built-in resource packs**, drawn for Velocity and switched on by default (toggle in **Settings** or Options → Resource Packs):
+- **Velocity Icons**: flat hearts (every type: poison, wither, absorption, frozen, hardcore), hunger, armor,
+  air bubbles, a see-through rounded hotbar, a gradient XP bar and a clean crosshair.
+- **Velocity Clear Glass**: glass and all 16 stained glass colours without the streaks.
+
+**Transparency** (**Settings → Transparency**) has sliders for menus and buttons, inventory windows,
+HUD backgrounds, the hotbar (items stay solid) and the chat background.
 
 **HUD Editor**: drag elements anywhere. They snap to the screen centre, the edges and each other.
 Scroll over an element to resize it, or right-click it for its options.
