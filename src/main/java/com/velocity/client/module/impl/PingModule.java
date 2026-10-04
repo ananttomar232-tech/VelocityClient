@@ -8,7 +8,7 @@ import net.minecraft.item.Items;
 
 public final class PingModule extends TextHudModule {
     public PingModule() {
-        super("ping", "Ping", "Your connection latency to the server.", Category.HUD, Items.ENDER_PEARL, false, 0.005f, 0.19f);
+        super("ping", "Ping", "Your connection latency to the server.", Category.HUD, Items.ENDER_PEARL, false, 0.005f, 0.25f);
     }
 
     @Override

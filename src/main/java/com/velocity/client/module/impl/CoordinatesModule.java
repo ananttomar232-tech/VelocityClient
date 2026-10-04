@@ -11,7 +11,7 @@ public final class CoordinatesModule extends TextHudModule {
     private final BoolSetting facing = add(new BoolSetting("Show Facing", true));
 
     public CoordinatesModule() {
-        super("coordinates", "Coordinates", "Your X / Y / Z position.", Category.HUD, Items.COMPASS, false, 0.005f, 0.13f);
+        super("coordinates", "Coordinates", "Your X / Y / Z position.", Category.HUD, Items.COMPASS, false, 0.005f, 0.19f);
     }
 
     @Override

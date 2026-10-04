@@ -10,7 +10,7 @@ public final class DirectionModule extends TextHudModule {
     private static final String[] NAMES = {"S", "SW", "W", "NW", "N", "NE", "E", "SE"};
 
     public DirectionModule() {
-        super("direction", "Direction", "The way you are facing, with yaw angle.", Category.HUD, Items.RECOVERY_COMPASS, false, 0.005f, 0.25f);
+        super("direction", "Direction", "The way you are facing, with yaw angle.", Category.HUD, Items.RECOVERY_COMPASS, false, 0.005f, 0.31f);
     }
 
     public static String shortFacing(float yaw) {

@@ -11,7 +11,7 @@ public final class SpeedModule extends TextHudModule {
     private double speed;
 
     public SpeedModule() {
-        super("speed", "Speed", "Horizontal movement speed in blocks per second.", Category.HUD, Items.FEATHER, false, 0.005f, 0.31f);
+        super("speed", "Speed", "Horizontal movement speed in blocks per second.", Category.HUD, Items.FEATHER, false, 0.005f, 0.37f);
     }
 
     @Override

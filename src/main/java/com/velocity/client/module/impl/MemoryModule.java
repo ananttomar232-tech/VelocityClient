@@ -7,7 +7,7 @@ import net.minecraft.item.Items;
 
 public final class MemoryModule extends TextHudModule {
     public MemoryModule() {
-        super("memory", "Memory", "How much RAM Minecraft is using.", Category.PERFORMANCE, Items.WRITABLE_BOOK, false, 0.005f, 0.37f);
+        super("memory", "Memory", "How much RAM Minecraft is using.", Category.PERFORMANCE, Items.WRITABLE_BOOK, false, 0.005f, 0.43f);
     }
 
     @Override

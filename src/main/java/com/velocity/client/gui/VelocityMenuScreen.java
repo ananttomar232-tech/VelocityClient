@@ -310,8 +310,13 @@ public final class VelocityMenuScreen extends BaseScreen {
 
         Gfx.item(ctx, m.getIcon(), cx + 52, cy - 2, 1f);
         ctx.drawText(textRenderer, Text.literal(m.getName()).formatted(Formatting.BOLD), cx + 72, cy, 0xFFFFFFFF, true);
-        Gfx.text(ctx, textRenderer, m.getDescription(), cx + 72, cy + 10, Gfx.MUTED);
-        Gfx.text(ctx, textRenderer, m.isEnabled() ? "Enabled" : "Disabled", cx + cw - 60, cy + 2, m.isEnabled() ? Gfx.GREEN : Gfx.RED);
+        String status = m.isEnabled() ? "Enabled" : "Disabled";
+        int statusX = cx + cw - 30 - textRenderer.getWidth(status);
+        String desc = m.getDescription();
+        int descMax = statusX - (cx + 72) - 6;
+        if (textRenderer.getWidth(desc) > descMax) desc = textRenderer.trimToWidth(desc, descMax - 8) + "..";
+        Gfx.text(ctx, textRenderer, desc, cx + 72, cy + 10, Gfx.MUTED);
+        Gfx.text(ctx, textRenderer, status, statusX, cy + 2, m.isEnabled() ? Gfx.GREEN : Gfx.RED);
         toggle(ctx, cx + cw - 24, cy + 1, m.isEnabled(), () -> { m.toggle(); VelocityConfig.save(); });
 
         int top = cy + 26, viewH = ch - 26;

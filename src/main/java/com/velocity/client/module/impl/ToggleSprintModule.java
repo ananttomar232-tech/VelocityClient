@@ -12,7 +12,7 @@ public final class ToggleSprintModule extends TextHudModule {
     private boolean toggled = true;
 
     public ToggleSprintModule() {
-        super("togglesprint", "Toggle Sprint", "Tap sprint once and never hold Ctrl again.", Category.PVP, Items.LEATHER_BOOTS, true, 0.005f, 0.95f);
+        super("togglesprint", "Toggle Sprint", "Tap sprint once and never hold Ctrl again.", Category.PVP, Items.LEATHER_BOOTS, true, 0.005f, 0.13f);
         showLabel.set(false);
         brackets.set(true);
     }

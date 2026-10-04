@@ -21,7 +21,7 @@ public final class KeystrokesModule extends HudModule {
     private long lastFrame = System.nanoTime();
 
     public KeystrokesModule() {
-        super("keystrokes", "Keystrokes", "Shows WASD, mouse and jump presses with smooth highlights.", Category.PVP, Items.TRIPWIRE_HOOK, false, 0.005f, 0.55f);
+        super("keystrokes", "Keystrokes", "Shows WASD, mouse and jump presses with smooth highlights.", Category.PVP, Items.TRIPWIRE_HOOK, false, 0.99f, 0.62f);
     }
 
     @Override

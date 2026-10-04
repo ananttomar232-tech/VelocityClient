@@ -23,7 +23,7 @@ public final class ArmorStatusModule extends HudModule {
     private final BoolSetting showHand = add(new BoolSetting("Show Held Item", true));
 
     public ArmorStatusModule() {
-        super("armor", "Armor Status", "Your armor and held item with durability.", Category.HUD, Items.DIAMOND_CHESTPLATE, true, 0.005f, 0.75f);
+        super("armor", "Armor Status", "Your armor and held item with durability.", Category.HUD, Items.DIAMOND_CHESTPLATE, true, 0.005f, 0.6f);
     }
 
     private List<ItemStack> stacks(MinecraftClient client, boolean editor) {

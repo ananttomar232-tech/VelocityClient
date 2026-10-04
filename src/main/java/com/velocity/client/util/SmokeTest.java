@@ -45,6 +45,8 @@ public final class SmokeTest {
     }
 
     private static void build() {
+        // Skip the first-launch accessibility screen; the mixin turns this into the Velocity main menu.
+        STEPS.add(c -> c.setScreen(new net.minecraft.client.gui.screen.TitleScreen()));
         STEPS.add(c -> shot(c, "1-title"));
         STEPS.add(c -> c.setScreen(new VelocityMenuScreen(c.currentScreen)));
         STEPS.add(c -> shot(c, "2-mods"));
