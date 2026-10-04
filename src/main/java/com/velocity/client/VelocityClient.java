@@ -7,6 +7,7 @@ import com.velocity.client.module.impl.FullbrightModule;
 import com.velocity.client.util.FpsTracker;
 import com.velocity.client.util.Gfx;
 import com.velocity.client.util.PerformancePresets;
+import com.velocity.client.util.SmokeTest;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -61,6 +62,7 @@ public final class VelocityClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             FpsTracker.tick(client);
+            if (SmokeTest.enabled()) SmokeTest.tick(client);
             ModuleManager.tick(client);
             while (OPEN_MENU.wasPressed()) {
                 if (client.currentScreen == null) client.setScreen(new VelocityMenuScreen(null));

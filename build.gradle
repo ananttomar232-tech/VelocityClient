@@ -13,6 +13,16 @@ loom {
     mixin {
         defaultRefmapName = "velocity.refmap.json"
     }
+
+    runs {
+        client {
+            // CI sets VELOCITY_SMOKE=1 to open every Velocity screen, screenshot it and quit.
+            if (System.getenv("VELOCITY_SMOKE") != null) {
+                vmArg "-Dvelocity.smoketest=true"
+                vmArg "-Dmixin.debug.verify=true"
+            }
+        }
+    }
 }
 
 dependencies {

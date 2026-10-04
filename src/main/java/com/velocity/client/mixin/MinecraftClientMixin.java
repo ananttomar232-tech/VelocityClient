@@ -14,13 +14,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin {
-    @Inject(method = "getFramerateLimit", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "getFramerateLimit", at = @At("HEAD"), cancellable = true)
     private void velocity$dynamicFps(CallbackInfoReturnable<Integer> cir) {
         int limit = DynamicFpsModule.frameLimit((MinecraftClient) (Object) this);
         if (limit > 0) cir.setReturnValue(limit);
     }
 
-    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true, require = 0)
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen velocity$customTitle(Screen screen) {
         if (screen instanceof TitleScreen) {
             if (VelocityTitleScreen.showVanillaOnce) {

@@ -106,6 +106,11 @@ public final class VelocityMenuScreen extends BaseScreen {
         scroll = targetScroll = 0;
     }
 
+    /** Switch page by name ("MODS", "PERFORMANCE", "SETTINGS"). */
+    public void showPage(String name) {
+        switchPage(Page.valueOf(name));
+    }
+
     // ------------------------------------------------------------------ rendering
 
     @Override
