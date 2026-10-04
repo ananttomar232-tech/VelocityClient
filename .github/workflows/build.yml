@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Publish a GitHub Release with this tag (e.g. v1.0.0). Leave empty to just build.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -11,6 +16,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Set by "Run workflow" with a release tag, or by pushing a v* tag.
+      RELEASE_TAG: ${{ inputs.release_tag || (startsWith(github.ref, 'refs/tags/v') && github.ref_name || '') }}
 
     steps:
       - name: Checkout
@@ -52,20 +60,22 @@ jobs:
           path: dist/
 
       - name: Zip for release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: env.RELEASE_TAG != ''
         run: |
-          cd dist && zip -r "../Velocity-Client-${GITHUB_REF_NAME}.zip" . && cd ..
+          cd dist && zip -r "../Velocity-Client-${RELEASE_TAG}.zip" . && cd ..
 
-      - name: Publish release (tags v*)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish release
+        if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v2
         with:
-          name: Velocity Client ${{ github.ref_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Velocity Client ${{ env.RELEASE_TAG }}
           make_latest: true
           body: |
-            ## ⚡ Velocity Client ${{ github.ref_name }} for Minecraft 1.21.1 (Fabric)
+            ## ⚡ Velocity Client ${{ env.RELEASE_TAG }} for Minecraft 1.21.1 (Fabric)
 
-            **Easiest:** download `Velocity-Client-${{ github.ref_name }}.zip`, unzip it, double-click `Install-Velocity.bat`,
+            **Easiest:** download `Velocity-Client-${{ env.RELEASE_TAG }}.zip`, unzip it, double-click `Install-Velocity.bat`,
             then pick **Velocity Client** in the Minecraft Launcher. In game, press **Right Shift**.
 
             **Only the mod:** download the `velocity-client-*.jar` below and put it in your Fabric 1.21.1 `mods` folder
@@ -74,7 +84,7 @@ jobs:
             Chrome may warn about `.jar`/`.zip` files because they can contain programs. Open `chrome://downloads` and choose **Keep**.
             If Windows says "Windows protected your PC", click **More info → Run anyway**.
           files: |
-            Velocity-Client-${{ github.ref_name }}.zip
+            Velocity-Client-${{ env.RELEASE_TAG }}.zip
             dist/*
 
   # Starts the real game on a virtual screen, opens every Velocity screen, screenshots it and quits.
